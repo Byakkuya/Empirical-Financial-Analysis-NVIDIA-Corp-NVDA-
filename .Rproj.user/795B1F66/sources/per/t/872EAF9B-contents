@@ -1,0 +1,109 @@
+# ---------- 0) Packages ----------
+pkgs <- c("quantmod", "ggplot2", "dplyr")
+for (p in pkgs) {
+  if (!require(p, character.only = TRUE)) install.packages(p)
+  library(p, character.only = TRUE)
+}
+
+options(stringsAsFactors = FALSE)
+
+# ---------- 1) Download data ----------
+start_date <- "2020-01-01"
+end_date   <- "2024-06-30"
+
+getSymbols("NVDA",  src = "yahoo", from = start_date, to = end_date)
+getSymbols("^GSPC", src = "yahoo", from = start_date, to = end_date)
+
+# ---------- 2) Visualization ----------
+
+# Convert to data frames
+nvda_df <- data.frame(Date = index(NVDA), coredata(NVDA))
+sp500_df <- data.frame(Date = index(GSPC), coredata(GSPC))
+
+# Plot NVDA adjusted prices
+ggplot(nvda_df, aes(x = Date, y = NVDA.Adjusted)) +
+  geom_line(color = "darkgreen") +
+  labs(
+    title = "NVDA Adjusted Prices",
+    x = "Date",
+    y = "Price (USD)"
+  ) +
+  theme_minimal()
+
+# Plot S&P 500 adjusted prices
+ggplot(sp500_df, aes(x = Date, y = GSPC.Adjusted)) +
+  geom_line(color = "blue") +
+  labs(
+    title = "S&P 500 Adjusted Prices",
+    x = "Date",
+    y = "Index Value"
+  ) +
+  theme_minimal()
+
+# Compare both
+combined_data <- merge(
+  nvda_df[, c("Date", "NVDA.Adjusted")],
+  sp500_df[, c("Date", "GSPC.Adjusted")],
+  by = "Date"
+)
+
+ggplot(combined_data) +
+  geom_line(aes(x = Date, y = NVDA.Adjusted, color = "NVDA")) +
+  geom_line(aes(x = Date, y = GSPC.Adjusted, color = "S&P500")) +
+  labs(
+    title = "NVDA vs S&P 500",
+    x = "Date",
+    y = "Adjusted Price"
+  ) +
+  scale_color_manual(values = c("NVDA" = "darkgreen", "S&P500" = "blue")) +
+  theme_minimal()
+
+# ---------- 3) Returns & Analytics ----------
+
+# Log returns
+nvda_returns <- dailyReturn(Ad(NVDA), type = "log")
+sp500_returns <- dailyReturn(Ad(GSPC), type = "log")
+
+# Mean & volatility
+nvda_mean <- mean(nvda_returns, na.rm = TRUE)
+nvda_sd   <- sd(nvda_returns, na.rm = TRUE)
+
+sp500_mean <- mean(sp500_returns, na.rm = TRUE)
+sp500_sd   <- sd(sp500_returns, na.rm = TRUE)
+
+cat("NVDA Mean:", nvda_mean, "| NVDA SD:", nvda_sd, "\n")
+cat("S&P500 Mean:", sp500_mean, "| S&P500 SD:", sp500_sd, "\n")
+
+# ---------- 4) Volatility comparison ----------
+cat("Is NVDA more volatile than S&P500?", nvda_sd > sp500_sd, "\n")
+
+# ---------- 5) Arithmetic vs Geometric (NVDA) ----------
+
+nvda_arith_returns <- dailyReturn(Ad(NVDA), type = "arithmetic")
+
+arithmetic_avg <- mean(nvda_arith_returns, na.rm = TRUE)
+
+nvda_vec <- as.numeric(na.omit(nvda_arith_returns))
+geometric_avg <- (prod(1 + nvda_vec)^(1 / length(nvda_vec)) - 1)
+
+cat("NVDA Arithmetic Avg:", arithmetic_avg, "\n")
+cat("NVDA Geometric Avg:", geometric_avg, "\n")
+
+# ---------- 6) Risk-Return Plot ----------
+
+risk_return_df <- data.frame(
+  Asset = c("NVDA", "S&P500"),
+  MeanReturn = c(nvda_mean, sp500_mean),
+  Volatility = c(nvda_sd, sp500_sd)
+)
+
+ggplot(risk_return_df, aes(x = Volatility, y = MeanReturn, label = Asset)) +
+  geom_point(size = 4) +
+  geom_text(vjust = -0.5) +
+  labs(
+    title = "Risk-Return Trade-Off: NVDA vs S&P 500",
+    x = "Volatility (Risk)",
+    y = "Average Return"
+  ) +
+  theme_minimal()
+

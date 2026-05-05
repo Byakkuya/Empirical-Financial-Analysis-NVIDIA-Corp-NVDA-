@@ -1,0 +1,321 @@
+# Load required libraries
+if (!require("quantmod")) install.packages("quantmod")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("nortest")) install.packages("nortest")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("moments")) install.packages("moments")
+if (!require("tseries")) install.packages("tseries")
+if (!require("tidyr")) install.packages("tidyr")
+
+library(quantmod)
+library(ggplot2)
+library(nortest)
+library(dplyr)
+library(moments)
+library(tseries)
+library(tidyr)
+
+# ------------------------------------------------------------------
+# SECTION 1: Download Market Data
+# Retrieve SPY data from Yahoo Finance (from 2015-01-01 to today)
+getSymbols("SPY", src = "yahoo", from = "2015-01-01", to = Sys.Date())
+spy_prices <- SPY$SPY.Adjusted
+
+# Calculate daily log returns
+spy_returns <- dailyReturn(spy_prices, type = "log")
+colnames(spy_returns) <- "Returns"
+spy_returns_df <- data.frame(
+  Date = index(spy_returns),
+  Returns = coredata(spy_returns)
+)
+
+# ------------------------------------------------------------------
+# SECTION 2: Visualizing Returns
+p1 <- ggplot(data = spy_returns_df, aes(x = Date, y = Returns)) +
+  geom_line(color = "blue") +
+  labs(title = "Daily Log Returns of SPY", x = "Date", y = "Log Return") +
+  theme_minimal()
+print(p1)
+
+p2 <- ggplot(data = spy_returns_df, aes(x = Returns)) +
+  geom_histogram(aes(y = ..density..), bins = 30, fill = "blue", alpha = 0.5) +
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = mean(spy_returns_df$Returns, na.rm = TRUE),
+      sd = sd(spy_returns_df$Returns, na.rm = TRUE)
+    ),
+    color = "red",
+    size = 1
+  ) +
+  labs(
+    title = "Histogram of SPY Returns with Normal Density",
+    x = "Return",
+    y = "Density"
+  ) +
+  theme_minimal()
+print(p2)
+
+qqnorm(spy_returns_df$Returns, main = "Q-Q Plot of SPY Returns")
+qqline(spy_returns_df$Returns, col = "red")
+
+set.seed(123)
+x <- rnorm(1000)
+qqnorm(x, main = "Q-Q Plot: Perfect Normality")
+qqline(x, col = "red", lwd = 2)
+
+# ------------------------------------------------------------------
+# SECTION 3: Formal Normality Testing
+shapiro_test <- shapiro.test(spy_returns_df$Returns)
+cat("Shapiro-Wilk Test:\n")
+print(shapiro_test)
+
+ad_test <- ad.test(spy_returns_df$Returns)
+cat("Anderson-Darling Test:\n")
+print(ad_test)
+
+ks_test <- ks.test(
+  spy_returns_df$Returns,
+  "pnorm",
+  mean = mean(spy_returns_df$Returns, na.rm = TRUE),
+  sd = sd(spy_returns_df$Returns, na.rm = TRUE)
+)
+cat("Kolmogorov-Smirnov Test:\n")
+print(ks_test)
+
+jb_test <- jarque.bera.test(spy_returns_df$Returns)
+cat("Jarque-Bera Test:\n")
+print(jb_test)
+
+# ------------------------------------------------------------------
+# SECTION 4: Discussion of Non-Normal Returns
+skewness_val <- skewness(spy_returns_df$Returns, na.rm = TRUE)
+kurtosis_val <- kurtosis(spy_returns_df$Returns, na.rm = TRUE)
+cat("Skewness:", skewness_val, "\n")
+cat("Kurtosis:", kurtosis_val, "\n")
+if (abs(skewness_val) > 0.5) cat("The distribution is skewed.\n")
+if (kurtosis_val > 3) cat("The distribution has heavy tails.\n")
+
+# ------------------------------------------------------------------
+# SECTION 5: Dealing with Non-Normality
+spy_simple_returns <- dailyReturn(spy_prices, type = "arithmetic")
+colnames(spy_simple_returns) <- "Returns"
+spy_simple_df <- data.frame(
+  Date = index(spy_simple_returns),
+  Returns = coredata(spy_simple_returns)
+)
+
+sqrt_returns <- sqrt(abs(spy_simple_df$Returns)) * sign(spy_simple_df$Returns)
+log_transformed <- log(1 + spy_simple_df$Returns)
+
+transformed_df <- data.frame(
+  Original = spy_simple_df$Returns,
+  Sqrt = sqrt_returns,
+  Log = log_transformed
+)
+
+long_df <- pivot_longer(
+  transformed_df,
+  everything(),
+  names_to = "Type",
+  values_to = "Return"
+)
+
+ggplot(long_df, aes(x = Return, fill = Type)) +
+  geom_histogram(aes(y = ..density..), bins = 30, alpha = 0.4, position = "identity") +
+  facet_wrap(~Type, scales = "free") +
+  labs(title = "Distributions: Original vs Sqrt vs Log", x = "Return", y = "Density") +
+  theme_minimal()
+
+pre_covid <- spy_returns_df$Returns[spy_returns_df$Date < as.Date("2020-03-01")]
+post_covid <- spy_returns_df$Returns[spy_returns_df$Date >= as.Date("2020-03-01")]
+
+wilcox_test <- wilcox.test(pre_covid, post_covid, alternative = "two.sided")
+cat("Wilcoxon Test:\n")
+print(wilcox_test)
+
+# ------------------------------------------------------------------
+# SECTION 6: Risk Measures: VaR and Expected Shortfall
+confidence_level <- 0.95
+VaR <- quantile(spy_returns_df$Returns, probs = 1 - confidence_level, na.rm = TRUE)
+ES <- mean(spy_returns_df$Returns[spy_returns_df$Returns <= VaR], na.rm = TRUE)
+cat("Value at Risk (95%):", VaR, "\n")
+cat("Expected Shortfall (95%):", ES, "\n")
+
+p4 <- ggplot(data = spy_returns_df, aes(x = Returns)) +
+  geom_histogram(aes(y = ..density..), bins = 30, fill = "grey", alpha = 0.5) +
+  geom_vline(xintercept = VaR, color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Histogram of SPY Returns with VaR", x = "Return", y = "Density") +
+  theme_minimal()
+print(p4)
+
+# ------------------------------------------------------------------
+# SECTION 7: Student Exercise (Suggestions)
+# 1. Choose a different asset (e.g., AAPL or TSLA) and repeat the analysis.
+# 2. Compare skewness and kurtosis between your chosen asset and SPY.
+# 3. Visualize returns before/after a major market event (e.g., COVID-19).
+# 4. Explore whether normality is an appropriate assumption.
+# 5. Calculate VaR and ES at different confidence levels (e.g., 99%).
+# 6. Analyze autocorrelations in returns and squared returns to investigate volatility clustering.
+
+# ------------------------------------------------------------------
+# SECTION 8: CAPM - Estimating Beta and Alpha for Multiple Assets
+tickers <- c("AAPL", "MSFT", "TSLA", "KO", "XOM")
+getSymbols(tickers, src = "yahoo", from = "2015-01-01", to = Sys.Date())
+
+asset_returns_list <- lapply(tickers, function(tkr) {
+  px <- Ad(get(tkr))
+  ret <- dailyReturn(px, type = "log")
+  colnames(ret) <- tkr
+  ret
+})
+asset_returns <- do.call(merge, asset_returns_list)
+
+market_returns <- spy_returns
+colnames(market_returns) <- "SPY"
+
+all_returns <- na.omit(merge(asset_returns, market_returns))
+
+estimate_capm <- function(asset_name, data) {
+  df <- data.frame(
+    asset = as.numeric(data[, asset_name][, 1]),
+    market = as.numeric(data[, "SPY"][, 1])
+  )
+  
+  model <- lm(asset ~ market, data = df)
+  
+  alpha_daily <- coef(model)[1]
+  beta <- coef(model)[2]
+  
+  avg_asset_return_daily <- mean(df$asset, na.rm = TRUE)
+  avg_market_return_daily <- mean(df$market, na.rm = TRUE)
+  
+  capm_expected_daily <- beta * avg_market_return_daily
+  capm_gap_daily <- avg_asset_return_daily - capm_expected_daily
+  
+  data.frame(
+    Asset = asset_name,
+    Alpha_Daily = alpha_daily,
+    Beta = beta,
+    Avg_Return_Daily = avg_asset_return_daily,
+    Market_Return_Daily = avg_market_return_daily,
+    CAPM_Predicted_Daily = capm_expected_daily,
+    Gap_Actual_minus_CAPM = capm_gap_daily,
+    R_squared = summary(model)$r.squared
+  )
+}
+
+capm_results <- do.call(rbind, lapply(tickers, estimate_capm, data = all_returns))
+
+capm_results <- capm_results %>%
+  mutate(
+    Alpha_Annualized = Alpha_Daily * 252,
+    Avg_Return_Annualized = Avg_Return_Daily * 252,
+    CAPM_Predicted_Annualized = CAPM_Predicted_Daily * 252,
+    Gap_Annualized = Gap_Actual_minus_CAPM * 252
+  )
+
+cat("\nCAPM RESULTS:\n")
+print(capm_results)
+
+# ------------------------------------------------------------------
+# SECTION 9: Visualizing CAPM Results
+ggplot(capm_results, aes(x = Beta, y = Avg_Return_Annualized, label = Asset)) +
+  geom_point(size = 3, color = "blue") +
+  geom_text(nudge_y = 0.01) +
+  geom_abline(
+    intercept = 0,
+    slope = mean(as.numeric(all_returns[, "SPY"]), na.rm = TRUE) * 252,
+    linetype = "dashed",
+    color = "red"
+  ) +
+  labs(title = "Average Return vs Beta", x = "Estimated Beta", y = "Annualized Average Return") +
+  theme_minimal()
+
+ggplot(capm_results, aes(x = Asset, y = Alpha_Annualized, fill = Asset)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Estimated Annualized Alpha by Asset", x = "Asset", y = "Annualized Alpha") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# ------------------------------------------------------------------
+# SECTION 10: Detailed CAPM Regressions
+capm_models <- lapply(tickers, function(tkr) {
+  df <- data.frame(
+    asset = as.numeric(all_returns[, tkr][, 1]),
+    market = as.numeric(all_returns[, "SPY"][, 1])
+  )
+  lm(asset ~ market, data = df)
+})
+names(capm_models) <- tickers
+
+for (tkr in tickers) {
+  cat("\n============================\n")
+  cat("CAPM regression for", tkr, "\n")
+  cat("============================\n")
+  print(summary(capm_models[[tkr]]))
+}
+
+# ------------------------------------------------------------------
+# SECTION 11: A Simple Zero-Beta / Arbitrage-Style Portfolio
+beta_tsla <- capm_results$Beta[capm_results$Asset == "TSLA"]
+beta_ko <- capm_results$Beta[capm_results$Asset == "KO"]
+
+w_tsla <- 1
+w_ko <- -beta_tsla / beta_ko
+
+cat("\nZERO-BETA PORTFOLIO WEIGHTS:\n")
+cat("TSLA weight:", w_tsla, "\n")
+cat("KO weight:", w_ko, "\n")
+
+port_returns <- w_tsla * all_returns[, "TSLA"] + w_ko * all_returns[, "KO"]
+colnames(port_returns) <- "ZeroBeta"
+
+port_df <- data.frame(
+  port = as.numeric(port_returns[, 1]),
+  market = as.numeric(all_returns[, "SPY"][, 1])
+)
+
+port_model <- lm(port ~ market, data = port_df)
+
+cat("\nZERO-BETA PORTFOLIO REGRESSION:\n")
+print(summary(port_model))
+
+cat("\nAverage daily return of zero-beta portfolio:\n")
+print(mean(port_df$port, na.rm = TRUE))
+
+cat("\nAnnualized average return of zero-beta portfolio:\n")
+print(mean(port_df$port, na.rm = TRUE) * 252)
+
+port_returns_df <- data.frame(
+  Date = index(port_returns),
+  Returns = as.numeric(port_returns[, 1])
+)
+
+ggplot(port_returns_df, aes(x = Date, y = Returns)) +
+  geom_line(color = "darkgreen") +
+  labs(title = "Zero-Beta Portfolio Returns Over Time", x = "Date", y = "Portfolio Return") +
+  theme_minimal()
+
+# ------------------------------------------------------------------
+# SECTION 12: APT-lite with Additional Risk Factors
+getSymbols(c("QQQ", "TLT"), src = "yahoo", from = "2015-01-01", to = Sys.Date())
+
+qqq_ret <- dailyReturn(Ad(QQQ), type = "log")
+tlt_ret <- dailyReturn(Ad(TLT), type = "log")
+colnames(qqq_ret) <- "QQQ"
+colnames(tlt_ret) <- "TLT"
+
+multi_factor_data <- na.omit(merge(asset_returns, market_returns, qqq_ret, tlt_ret))
+
+mf_df <- data.frame(
+  asset = as.numeric(multi_factor_data[, "AAPL"][, 1]),
+  spy = as.numeric(multi_factor_data[, "SPY"][, 1]),
+  qqq = as.numeric(multi_factor_data[, "QQQ"][, 1]),
+  tlt = as.numeric(multi_factor_data[, "TLT"][, 1])
+)
+
+mf_model <- lm(asset ~ spy + qqq + tlt, data = mf_df)
+
+cat("\nMULTI-FACTOR MODEL FOR AAPL:\n")
+print(summary(mf_model))

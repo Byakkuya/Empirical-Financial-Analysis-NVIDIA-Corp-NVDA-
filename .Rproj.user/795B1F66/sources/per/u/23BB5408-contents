@@ -1,0 +1,198 @@
+###############################################
+# POSITIVE EVENT ANALYSIS: Apple Product Event on September 10, 2019
+#
+# Context:
+# On September 10, 2019, Apple hosted a major product launch event.
+# Such events typically generate positive investor sentiment and may
+# drive the stock to perform better than expected.
+###############################################
+
+# Load Required Libraries
+if (!require("quantmod")) install.packages("quantmod")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("xts")) install.packages("xts")
+if (!require("tibble")) install.packages("tibble")
+
+library(quantmod)
+library(ggplot2)
+library(dplyr)
+library(xts)
+library(tibble)
+
+# Define the positive event date
+positive_event_date <- as.Date("2019-09-10")
+
+# Set the estimation window parameters
+estimation_start <- positive_event_date - 150   # 150 days prior
+estimation_end   <- positive_event_date - 17     # Up to 7 days before the event
+
+# Set the event window parameters (5 days before and after)
+event_window_start <- positive_event_date - 15
+event_window_end   <- positive_event_date + 15
+
+# Overall data period
+data_start <- estimation_start
+data_end   <- event_window_end
+
+# Download AAPL and SPY data from Yahoo Finance
+getSymbols("AAPL", src = "yahoo", from = data_start, to = data_end, auto.assign = TRUE)
+getSymbols("SPY",  src = "yahoo", from = data_start, to = data_end, auto.assign = TRUE)
+
+# Compute daily log returns using adjusted prices
+aapl_returns <- dailyReturn(Ad(AAPL), type = "log")
+spy_returns  <- dailyReturn(Ad(SPY),  type = "log")
+
+# Subset returns for the estimation window
+aapl_est <- aapl_returns[paste0(estimation_start, "/", estimation_end)]
+spy_est  <- spy_returns[paste0(estimation_start, "/", estimation_end)]
+
+# Subset returns for the event window
+aapl_event <- aapl_returns[paste0(event_window_start, "/", event_window_end)]
+spy_event  <- spy_returns[paste0(event_window_start, "/", event_window_end)]
+
+# Estimate the market model using the estimation window
+# Market Model: AAPL_Return = alpha + beta * SPY_Return + error
+market_model <- lm(coredata(aapl_est) ~ coredata(spy_est))
+alpha <- coef(market_model)[1]
+beta  <- coef(market_model)[2]
+cat("Positive Event - Market Model Estimate:\n")
+cat("AAPL_return =", round(alpha, 6), "+", round(beta, 6), "* SPY_return\n\n")
+
+# Compute expected returns and abnormal returns during the event window
+expected_returns <- alpha + beta * coredata(spy_event)
+abnormal_returns <- coredata(aapl_event) - expected_returns
+
+# Create a tibble containing the event window data
+event_df_pos <- tibble(
+  Date            = index(aapl_event),
+  AAPL_Return     = coredata(aapl_event),
+  SPY_Return      = coredata(spy_event),
+  Expected_Return = expected_returns,
+  Abnormal_Return = abnormal_returns
+) %>% 
+  arrange(Date) %>%
+  mutate(CAR = cumsum(Abnormal_Return))
+
+# Display the event_df for inspection
+print(event_df_pos)
+
+# Plot Daily Abnormal Returns with the event day marked
+p_ar_pos <- ggplot(event_df_pos, aes(x = Date, y = Abnormal_Return)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_vline(xintercept = positive_event_date, linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  labs(title = "Positive Event: Daily Abnormal Returns",
+       subtitle = "Event day (Sep 10, 2019) marked in red",
+       x = "Date", y = "Abnormal Return") +
+  theme_minimal()
+print(p_ar_pos)
+
+# Plot Cumulative Abnormal Returns (CAR) with the event day marked
+p_car_pos <- ggplot(event_df_pos, aes(x = Date, y = CAR)) +
+  geom_line(linewidth = 1.2, color = "darkgreen") +
+  geom_point(size = 3, color = "darkgreen") +
+  geom_vline(xintercept = positive_event_date, linetype = "dashed", color = "red") +
+  labs(title = "Positive Event: Cumulative Abnormal Returns (CAR)",
+       subtitle = "Event day (Sep 10, 2019) marked in red",
+       x = "Date", y = "CAR") +
+  theme_minimal()
+print(p_car_pos)
+
+
+###############################################
+# NEGATIVE EVENT ANALYSIS: Apple Earnings Miss on January 26, 2018
+#
+# Context:
+# On January 26, 2018, Apple reported quarterly earnings that disappointed investors
+# due to lower-than-expected iPhone sales. This negative news sent shockwaves through the market,
+# leading to a significant decline in AAPL's share price.
+###############################################
+
+# Load Required Libraries (if not already loaded)
+if (!require("quantmod")) install.packages("quantmod")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("xts")) install.packages("xts")
+if (!require("tibble")) install.packages("tibble")
+
+library(quantmod)
+library(ggplot2)
+library(dplyr)
+library(xts)
+library(tibble)
+
+# Define the negative event date
+negative_event_date <- as.Date("2018-01-26")
+
+# Set the estimation window parameters
+estimation_start <- negative_event_date - 150   # 150 days prior
+estimation_end   <- negative_event_date - 17     # Up to 7 days before the event
+
+# Set the event window parameters (5 days before and after)
+event_window_start <- negative_event_date - 15
+event_window_end   <- negative_event_date + 15
+
+# Overall data period
+data_start <- estimation_start
+data_end   <- event_window_end
+
+# Download AAPL and SPY data from Yahoo Finance
+getSymbols("AAPL", src = "yahoo", from = data_start, to = data_end, auto.assign = TRUE)
+getSymbols("SPY",  src = "yahoo", from = data_start, to = data_end, auto.assign = TRUE)
+
+# Compute daily log returns using adjusted prices
+aapl_returns <- dailyReturn(Ad(AAPL), type = "log")
+spy_returns  <- dailyReturn(Ad(SPY),  type = "log")
+
+# Subset returns for the estimation window
+aapl_est <- aapl_returns[paste0(estimation_start, "/", estimation_end)]
+spy_est  <- spy_returns[paste0(estimation_start, "/", estimation_end)]
+
+# Subset returns for the event window
+aapl_event <- aapl_returns[paste0(event_window_start, "/", event_window_end)]
+spy_event  <- spy_returns[paste0(event_window_start, "/", event_window_end)]
+
+# Estimate the market model using the estimation window data
+market_model <- lm(coredata(aapl_est) ~ coredata(spy_est))
+alpha <- coef(market_model)[1]
+beta  <- coef(market_model)[2]
+cat("Negative Event - Market Model Estimate:\n")
+cat("AAPL_return =", round(alpha, 6), "+", round(beta, 6), "* SPY_return\n\n")
+
+# Compute expected returns and abnormal returns during the event window
+expected_returns <- alpha + beta * coredata(spy_event)
+abnormal_returns <- coredata(aapl_event) - expected_returns
+
+# Create a tibble with the event window data
+event_df_neg <- tibble(
+  Date            = index(aapl_event),
+  AAPL_Return     = coredata(aapl_event),
+  SPY_Return      = coredata(spy_event),
+  Expected_Return = expected_returns,
+  Abnormal_Return = abnormal_returns
+) %>% 
+  arrange(Date) %>%
+  mutate(CAR = cumsum(Abnormal_Return))
+
+# Plot Daily Abnormal Returns with the event day marked
+p_ar_neg <- ggplot(event_df_neg, aes(x = Date, y = Abnormal_Return)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_vline(xintercept = negative_event_date, linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  labs(title = "Negative Event: Daily Abnormal Returns",
+       subtitle = "Event day (Jan 26, 2018) marked in red",
+       x = "Date", y = "Abnormal Return") +
+  theme_minimal()
+print(p_ar_neg)
+
+# Plot Cumulative Abnormal Returns (CAR) with the event day marked
+p_car_neg <- ggplot(event_df_neg, aes(x = Date, y = CAR)) +
+  geom_line(linewidth = 1.2, color = "darkgreen") +
+  geom_point(size = 3, color = "darkgreen") +
+  geom_vline(xintercept = negative_event_date, linetype = "dashed", color = "red") +
+  labs(title = "Negative Event: Cumulative Abnormal Returns (CAR)",
+       subtitle = "Event day (Jan 26, 2018) marked in red",
+       x = "Date", y = "CAR") +
+  theme_minimal()
+print(p_car_neg)
