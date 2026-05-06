@@ -1,7 +1,8 @@
 # ============================================================
 #  FINAL PROJECT — NVIDIA (NVDA) EMPIRICAL ANALYSIS
 #  Course: Financial Econometrics
-#  Event:  Q3 FY2024 Earnings Release — November 21, 2023
+#  Event:  Q3 FY2024 Earnings Release — November 21, 2023 (after-hours)
+#          Market Reaction Date: November 22, 2023 (first trading day)
 #  Covers: Returns, EAR/APR, Normality, VaR/ES, CAL, Sharpe,
 #          Index Model, CAPM, APT, EMH, Behavioral Finance
 # ============================================================
@@ -260,11 +261,15 @@ cat(sprintf("\nAPT R-squared:        %.4f\nSingle-factor R²:     %.4f\nImprovem
 # ============================================================
 cat("\n====== SECTION G: Event Study — Q3 FY2024 Earnings ======\n")
 
-event_date <- as.Date("2023-11-21")
-est_start  <- event_date - 260
-est_end    <- event_date - 11
-evt_start  <- event_date - 10   # wider window for behavioral drift test
-evt_end    <- event_date + 20
+# IMPORTANT: Earnings released after market close on Nov 21, 2023
+# Actual market reaction occurred on Nov 22, 2023 (first trading day)
+# Setting t=0 to Nov 22 to align with actual trading reaction date
+
+event_date <- as.Date("2023-11-22")  # Changed from 2023-11-21 to actual trading reaction date
+est_start  <- event_date - 261       # Adjusted: 260 days before Nov 22
+est_end    <- event_date - 12        # Adjusted: 11 days before Nov 22
+evt_start  <- event_date - 11        # Adjusted: 10 days before Nov 22
+evt_end    <- event_date + 20        # 20 days after Nov 22
 
 est_idx <- index(nvda_ret) >= est_start & index(nvda_ret) <= est_end
 evt_idx <- index(nvda_ret) >= evt_start & index(nvda_ret) <= evt_end
