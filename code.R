@@ -259,17 +259,16 @@ cat(sprintf("\nAPT R-squared:        %.4f\nSingle-factor R²:     %.4f\nImprovem
 # ============================================================
 # SECTION G — EVENT STUDY (EMH TEST)
 # ============================================================
-cat("\n====== SECTION G: Event Study — Q3 FY2024 Earnings ======\n")
+cat("\n====== SECTION G: Event Study — Q2 FY2024 Earnings ======\n")
 
-# IMPORTANT: Earnings released after market close on Nov 21, 2023
-# Actual market reaction occurred on Nov 22, 2023 (first trading day)
-# Setting t=0 to Nov 22 to align with actual trading reaction date
+# NVIDIA Q2 FY2024 Earnings released August 23, 2023
+# Market reaction analyzed from August 23 (t=0) through late September
 
-event_date <- as.Date("2023-11-22")  # Changed from 2023-11-21 to actual trading reaction date
-est_start  <- event_date - 261       # Adjusted: 260 days before Nov 22
-est_end    <- event_date - 12        # Adjusted: 11 days before Nov 22
-evt_start  <- event_date - 11        # Adjusted: 10 days before Nov 22
-evt_end    <- event_date + 20        # 20 days after Nov 22
+event_date <- as.Date("2023-08-23")  # Q2 FY2024 earnings date
+est_start  <- event_date - 261       # 260 days before Aug 23
+est_end    <- event_date - 12        # 11 days before Aug 23
+evt_start  <- event_date - 11        # 10 days before Aug 23
+evt_end    <- event_date + 20        # 20 days after Aug 23
 
 est_idx <- index(nvda_ret) >= est_start & index(nvda_ret) <= est_end
 evt_idx <- index(nvda_ret) >= evt_start & index(nvda_ret) <= evt_end

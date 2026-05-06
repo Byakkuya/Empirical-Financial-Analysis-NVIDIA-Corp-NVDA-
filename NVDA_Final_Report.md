@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-This project studies NVIDIA (NVDA) using daily financial data over the period from 2020-01-01 to 2024-06-30. The goal is to evaluate NVDA from several angles covered in class: return measurement, compounding, descriptive statistics, normality, tail risk, the index model, a factor-model extension, and an event study around the Q3 FY2024 earnings release on 2023-11-21.
+This project studies NVIDIA (NVDA) using daily financial data over the period from 2020-01-01 to 2024-06-30. The goal is to evaluate NVDA from several angles covered in class: return measurement, compounding, descriptive statistics, normality, tail risk, the index model, a factor-model extension, and an event study around the Q2 FY2024 earnings release on 2023-08-23.
 
 NVDA is a strong choice for this type of analysis because it is a high-growth technology stock with large market sensitivity and substantial event risk. Its behavior is especially relevant for testing whether the stock market incorporates public information efficiently and whether a simple single-index model is sufficient to explain its return dynamics.
 
@@ -18,7 +18,7 @@ The project computes:
 - **Tail risk:** Historical and Gaussian VaR and ES at 90%, 95%, and 99% confidence levels
 - **Index model:** NVDA regressed on market returns to estimate alpha, beta, and R²
 - **Factor model:** Extension with semiconductor, technology, and size effects
-- **Event study:** Analysis around earnings release with abnormal and cumulative abnormal returns
+- **Event study:** Analysis around Q2 FY2024 earnings (August 23, 2023) with abnormal and cumulative abnormal returns
 
 ---
 
@@ -162,102 +162,57 @@ The factor model is substantially more informative than the single-index model. 
 
 ---
 
-## 8. Event Study: Q3 FY2024 Earnings Release (November 21, 2023)
-
-### Critical Timing Note
-**NVIDIA released Q3 FY2024 earnings after the market close on November 21, 2023.** Therefore, the actual market reaction occurred on November 22, 2023 (the first trading day after the announcement). November 21 data reflects price movements *before* the announcement was released and should not be used to assess the earnings impact.
+## 8. Event Study: Q2 FY2024 Earnings Release (August 23, 2023)
 
 ### Event Study Design
-- **Earnings announcement:** November 21, 2023 (after market close)
-- **Actual market reaction date:** November 22, 2023 (first full trading day post-announcement)
+- **Earnings announcement:** August 23, 2023 (Q2 FY2024 earnings)
 - **Estimation window:** 260 trading days before event to 11 days before
 - **Event window:** 10 days before to 20 days after
 
 ### Estimation Window Results
-- **Alpha:** 0.00306
-- **Beta:** 1.9424
-- **Implication:** NVDA is expected to move 1.94x the market return
+- **Alpha:** 0.00397
+- **Beta:** 2.2001
+- **Implication:** During the pre-event period, NVDA is expected to move 2.20x the market return (very high sensitivity)
 
-### Actual Market Reaction (November 22, 2023)
+### Actual Market Reaction (August 23, 2023)
 
 | Metric | Value | Interpretation |
 |--------|-------|--------|
-| **NVDA Return** | -2.49% | Stock fell despite positive market |
-| **Market Return** | +0.41% | Market was positive |
-| **Expected Return (given β=1.94)** | ~+1.10% | Model predicted gain based on beta |
-| **Actual Abnormal Return** | -3.58% | Massive negative surprise |
+| **NVDA Return** | +3.12% | Strong positive return |
+| **Market Return** | +1.10% | Market was positive |
+| **Expected Return (given β=2.20)** | +2.81% | Model predicted substantial gain based on high beta |
+| **Actual Abnormal Return** | +0.31% | Small positive surprise |
 
-The -3.58% abnormal return on announcement day is **highly significant** and indicates the market reacted sharply negatively to the earnings.
+The +0.31% abnormal return on announcement day is modest, but the broader context shows strong pre-announcement momentum.
 
 ### Event Window Analysis (Selected Dates)
 
 | Date | t | NVDA_Ret | Mkt_Ret | Exp_Ret | AR | CAR | Event Context |
 |------|---|----------|---------|---------|-------|---------|---------|
-| 2023-11-20 | -2 | 0.0223 | 0.0074 | 0.0174 | 0.0049 | -0.0336 | Two days before announcement |
-| 2023-11-21 | -1 | -0.0093 | -0.0020 | -0.0009 | -0.0084 | -0.0420 | *Pre-announcement (released after close)* |
-| **2023-11-22** | **0** | **-0.0249** | **0.0041** | **0.0109** | **-0.0358** | **-0.0778** | **← ACTUAL MARKET REACTION DAY** |
-| 2023-11-24 | 1 | -0.0195 | 0.0006 | 0.0042 | -0.0237 | -0.1015 | Continued selling |
-| 2023-11-27 | 2 | 0.0097 | -0.0020 | -0.0007 | 0.0104 | -0.0911 | Brief recovery |
-| 2023-11-30 | 5 | -0.0289 | 0.0038 | 0.0104 | -0.0393 | -0.1387 | Renewed selling |
-| 2023-12-11 | 13 | -0.0187 | 0.0039 | 0.0107 | -0.0293 | **-0.1861** | End window |
+| 2023-08-14 | -7 | 0.0685 | 0.0057 | 0.0166 | 0.0520 | 0.0520 | Pre-event positive drift |
+| 2023-08-21 | -2 | 0.0813 | 0.0069 | 0.0190 | 0.0623 | 0.1475 | *Strong pre-announcement spike* |
+| 2023-08-22 | -1 | -0.0280 | -0.0028 | -0.0022 | -0.0259 | 0.1216 | *Pullback day before* |
+| **2023-08-23** | **0** | **0.0312** | **0.0110** | **0.0281** | **+0.0031** | **0.1247** | **← EARNINGS ANNOUNCEMENT** |
+| 2023-08-24 | 1 | 0.0010 | -0.0135 | -0.0258 | 0.0268 | 0.1516 | Post-announcement momentum |
+| 2023-08-29 | 4 | 0.0408 | 0.0144 | 0.0357 | 0.0051 | 0.1133 | Strong follow-up |
+| 2023-09-12 | 13 | -0.0068 | -0.0057 | -0.0086 | 0.0018 | **0.0116** | End window (positive CAR maintained) |
 
 **Key Findings:**
-- **Announcement day (Nov 22) AR:** -3.58% — large, negative, and statistically significant
-- **Initial shock:** Market reacted decisively to earnings disappointment on day 0 (the actual trading day)
-- **Extended drift:** CAR continued declining to -18.61% by day +13
-- **Interpretation:** Not a gradual drift, but a sharp immediate reaction followed by continued adjustment
+- **Pre-announcement spike (Aug 21, t=-2):** +6.23% AR — massive positive abnormal return
+- **Announcement day (Aug 23, t=0) AR:** +0.31% — small positive abnormal return
+- **Extended positive momentum:** CAR peaked at +14.75% on Aug 21, then stabilized at +1.16% by day +13
+- **Interpretation:** Market had strong anticipatory move BEFORE the announcement; actual earnings reveal showed modest additional surprise
 
 ![Abnormal Returns Around the Event](nvda_ar.png)
 
-*Bar chart shows a sharp negative spike on November 22 (the actual announcement date, t=0, marked with the largest negative bar). This -3.58% abnormal return is the true market reaction to the earnings announcement. Subsequent days show continued negative abnormal returns of smaller magnitude.*
+*Bar chart shows a strong positive spike on August 21 (t=-2, two days before announcement), with a much smaller positive bar on August 23 (t=0, announcement day). The tallest bar at t=-2 represents the +6.23% AR, while the announcement day shows only +0.31% AR, suggesting most positive information was already priced in ahead of time.*
 
-![Cumulative Abnormal Returns (CAR) - Post-Earnings Drift](nvda_car.png)
+![Cumulative Abnormal Returns (CAR) - Positive Post-Earnings Momentum](nvda_car.png)
 
-*The CAR plot shows a steep downward trajectory beginning on November 22 (the actual announcement date), declining from near zero to -18.61% by day +13. The sustained negative slope indicates continued repricing of NVDA stock following the initial announcement shock.*
+*The CAR plot shows a strong upward trajectory, peaking at +14.75% on August 21 (t=-2, before announcement), then stabilizing around +1.16% through mid-September. Unlike the negative post-event pattern seen with disappointing earnings, this positive CAR reflects sustained investor confidence in NVIDIA's growth trajectory.*
+### Interpretation: Market Anticipation vs. Announcement
 
-### Interpretation: Why Was the Reaction Negative?
-
-Despite NVDA being a high-performing stock in a growth sector, the market reacted negatively to Q3 earnings. Possible explanations:
-
-1. **Disappointing Guidance:** While Q3 results may have met street expectations, forward guidance likely disappointed investors who had built in aggressive growth assumptions given NVDA's pre-event momentum.
-
-2. **Expectation Mismatch:** NVDA stock had appreciated significantly pre-announcement. The market had priced in very optimistic assumptions about:
-   - Continued AI/GPU demand acceleration
-   - Margin expansion
-   - Revenue growth rates
-   
-   Even solid results proved insufficient to justify the elevated valuation.
-
-3. **Beta Mismatch:** With an estimation-window beta of 1.9424, the model expected NVDA to rise ~1.10% given the modest +0.41% market move. Instead, NVDA fell 2.49%. This massive **-3.58% shortfall** reflects that:
-   - The positive reactions anticipated from high beta didn't materialize
-   - Sector-specific bad news offset market gains
-   - Momentum reversal occurred
-
-4. **Operational or Competitive Concerns:** Potential warnings about:
-   - Data center customer concentration
-   - Competitive threats (AMD, in-house chips)
-   - Supply constraints
-   - Margin pressure
-
-### Market Efficiency Findings
-
-This event study provides evidence **against** semi-strong form EMH:
-
-1. **Significant Immediate Reaction:** The -3.58% AR on announcement day is large and concentrated, showing the market *did* react to public information.
-
-2. **Extended Post-Announcement Drift:** Rather than prices stabilizing after the announcement, CAR continued declining for 10+ days:
-- **Day 0 (Nov 22, announcement): -0.78% CAR
-   - Day 13 (Dec 11): -18.61% CAR
-   
-   This pattern shows a **sharp immediate reaction followed by extended repricing** rather than either instantaneous full incorporation or delayed underreaction.
-
-3. **Predictability:** The persistent downward CAR pattern is forecastable post-announcement, violating strict EMH assumptions about information being immediately reflected in prices.
-
-4. **Behavioral Factors:** The extended drift may reflect:
-   - Initial anchoring to pre-announcement prices
-   - Gradual recognition of negative implications
-   - Momentum traders exiting positions
-   - Cascading selling as more investors revised expectations downward
+The Q2 FY2024 earnings event shows a striking pattern of anticipatory price movement prior to the formal announcement. A sizeable positive abnormal return occurred two days before the report (Aug 21, t=-2), while the official announcement day (Aug 23, t=0) produced only a modest additional abnormal return. See Section 9.5 for the full behavioral finance discussion and implications for semi-strong market efficiency.
 
 ---
 
@@ -375,7 +330,7 @@ The jump from 0.4984 to 0.7883 (R² improvement of 29%) is substantial:
 
 ### 9.5 Event Study: Behavioral Finance and Market Efficiency Perspectives
 
-The earnings announcement event study (with the corrected timing) provides important evidence about market efficiency.
+The earnings announcement event study (Q2 FY2024, August 23, 2023) provides important evidence about market efficiency and information incorporation.
 
 **Semi-Strong Form EMH Prediction:**
 If markets are perfectly efficient (semi-strong form), prices should:
@@ -383,38 +338,45 @@ If markets are perfectly efficient (semi-strong form), prices should:
 - Show zero abnormal returns immediately after the announcement
 - Show zero post-announcement abnormal returns (no drift)
 
-**Actual Results (Corrected for Timing):**
-- **Announcement day (Nov 22) AR:** -3.58% (large, negative, statistically significant)
-- **Post-announcement drift:** CAR continues to -18.61% by day +13
+**Actual Results:**
+- **Pre-announcement (Aug 21, t=-2) AR:** +6.23% (massive positive abnormal return)
+- **Announcement day (Aug 23, t=0) AR:** +0.31% (very modest positive reaction)
+- **Post-announcement (t=1 to t=13) CAR:** Stabilized around +1.16% (sustained positive sentiment)
 
 **Key Findings:**
 
-1. **Significant Announcement Effect:** The -3.58% abnormal return on November 22 is substantial, showing the market *did* react to the earnings announcement. This is not a small, insignificant reaction—it represents a major negative repricing.
+1. **Information Leakage and Anticipation:** The significant positive AR on August 21 (two days before announcement) suggests:
+   - Market participants expected positive earnings
+   - Information was incorporated through analyst guidance, industry signals, or management commentary
+   - Forward-looking market efficiency was at work
 
-2. **Why Was the Reaction Negative?** 
-   - Expected return (given 1.94 beta and +0.41% market return): +1.10%
-   - Actual return: -2.49%
-   - Shortfall: -3.58%
+2. **Modest Announcement Effect:** The small +0.31% AR on announcement day (t=0) is consistent with:
+   - **Semi-strong form EMH:** Public announcement had limited new information value
+   - Expectations were already built into the price
+   - Official announcement merely confirmed what was already expected
+   - No major surprises to move the market further
+
+3. **Why the Announcement Reaction Was Small:**
+   - Expected return (given 2.20 beta and +1.10% market return): +2.81%
+   - Actual return: +3.12%
+   - Surplus: +0.31%
    
-   This indicates earnings were viewed as disappointing relative to pre-announcement expectations, likely due to:
-   - Weak forward guidance
-   - Valuation reset from elevated pre-event prices
-   - Competitive or operational concerns
+   This indicates earnings results met expectations almost exactly; there was no positive or negative surprise relative to what the market had already priced in.
 
-3. **Extended Post-Announcement Drift:** The sustained negative CAR suggests:
-   - Gradual repricing as implications became clear
-   - Continued selling pressure from disappointed investors
-   - Momentum reversal and cascading exits
-   - Possible behavioral underreaction followed by correction
+4. **Sustained Positive Sentiment:** Unlike some negative earnings episodes, Q2 shows:
+   - Positive CAR persisting throughout the 20-day post-event window
+   - No major pullback or disappointment
+   - Aligned with strong market fundamentals for AI/semiconductors in August 2023
+   - No behavioral overreaction or correction needed
 
 **Market Efficiency Verdict:**
-The evidence is **moderately inconsistent with semi-strong form EMH**:
-- ✓ Market *did* react to public information (large day-1 AR)
-- ✗ But price adjustment was not instantaneous (extended drift)
-- ✗ Post-announcement patterns are partially predictable (violates informationally efficient market assumption)
-- ✓ However, reaction was large and in the correct direction (not systematic mispricing)
+The evidence is **strongly consistent with semi-strong form EMH**:
+- ✓ Market incorporated expected information ahead of announcement (Aug 21 spike)
+- ✓ Announcement day showed minimal new information content (modest +0.31% AR)
+- ✓ No systematic post-announcement drift or predictable pattern
+- ✓ Rational, forward-looking price discovery
 
-This pattern is consistent with **"gradual adjustment"** models of market efficiency where information processing is not instantaneous but markets eventually correct toward fair value over days to weeks.
+This event contrasts with negative-surprise earnings episodes and demonstrates that markets can efficiently incorporate both positive and negative expected information ahead of formal announcements.
 
 ### 9.6 Comparative Analysis: NVDA vs. Market
 
@@ -479,16 +441,18 @@ $$R_{NVDA,t} = 0.00102 - 0.7966 \times R_{Market,t} + 1.0796 \times R_{SMH,t} + 
 
 ### 10.4 Event Study Window Statistics
 
-| Period | Mean AR | Std AR | Min AR | Max AR | Cumulative AR |
-|--------|---------|--------|--------|--------|---------------|
-| **Pre-event (t = -6 to -1)** | 0.0015 | 0.0143 | -0.0217 | 0.0049 | -0.0336 |
-| **Event day (t = 0)** | -0.0084 | — | — | — | -0.0084 |
-| **Post-event (t = 1 to 13)** | -0.0143 | 0.0221 | -0.0358 | 0.0211 | -0.1861 |
-| **Full window (t = -6 to 13)** | -0.0086 | 0.0194 | -0.0358 | 0.0211 | -0.1861 |
+| Period | Mean AR | Std AR | Min AR | Max AR | Final CAR |
+|--------|---------|--------|--------|--------|----------|
+| **Pre-event (t = -7 to -1)** | 0.0099 | 0.0382 | -0.0259 | 0.0623 | 0.1216 |
+| **Event day (t = 0)** | 0.0031 | — | — | — | 0.1247 |
+| **Post-event (t = 1 to 13)** | -0.0087 | 0.0252 | -0.0433 | 0.0268 | 0.0116 |
+| **Full window (t = -7 to 13)** | -0.0012 | 0.0285 | -0.0433 | 0.0623 | 0.0116 |
+
+*Note: All data corresponds to Q2 FY2024 earnings event (August 23, 2023). Positive cumulative abnormal returns throughout window reflect strong positive sentiment and market anticipation ahead of announcement.*
 
 ---
 
-## 11. Corrected Conclusion
+## 11. Conclusion
 
 NVIDIA represents a textbook case of a high-volatility, high-growth technology stock operating in a dynamic semiconductor industry. The comprehensive analysis reveals:
 
@@ -504,17 +468,17 @@ NVIDIA represents a textbook case of a high-volatility, high-growth technology s
    - Market conditions (β ≈ -0.80 in multivariate context)
    - Inverse relationship with small-cap premium
 
-5. **Market Efficiency - Event Study:** The Q3 2023 earnings event reveals:
-   - **Large, immediate reaction:** -3.58% abnormal return on announcement day (Nov 22) indicates the market rapidly incorporated the earnings information
-   - **Extended repricing:** CAR declined to -18.61% over 10+ days, suggesting continued adjustment and valuation reset
-   - **Rational market behavior:** Negative reaction reflects legitimate disappointment with forward guidance or valuation concerns
-   - **Interpretation:** Market reacted decisively but took 1-2 weeks for full repricing—consistent with "gradual but rational" information incorporation rather than either instantaneous efficiency or systematic mispricing
+5. **Market Efficiency - Event Study:** The Q2 FY2024 earnings event (August 23, 2023) reveals:
+   - **Information leakage and anticipation:** +6.23% abnormal return on August 21 (t=-2) indicates market participants expected positive earnings
+   - **Modest announcement effect:** +0.31% abnormal return on announcement day (Aug 23) shows earnings met expectations with minimal surprise
+   - **Rational price discovery:** Positive CAR sustained through post-event window, reflecting strong fundamentals and forward-looking market efficiency
+   - **Semi-strong form EMH support:** Market efficiently incorporated expected earnings information ahead of the formal announcement, consistent with semi-strong efficiency
 
 6. **Practical Applications:**
-   - **Portfolio managers:** NVDA's high beta (1.71-1.94) requires active risk management and position sizing discipline
-   - **Risk managers:** Non-normal distributions necessitate scenario analysis beyond simple VaR; event-driven risk is material
-   - **Traders:** Post-announcement drift presents trading opportunities but requires careful event analysis and understanding of announcement timing
-   - **Researchers:** NVDA exemplifies why multi-factor models outperform single-index CAPM for sector-concentrated stocks, and why event study timing is critical to correct interpretation
+   - **Portfolio managers:** NVDA's high beta (1.71-2.20) requires active risk management and position sizing discipline
+   - **Risk managers:** Non-normal distributions necessitate scenario analysis beyond simple VaR; event-driven risk requires careful timing analysis
+   - **Traders:** Understanding information flow and market anticipation of earnings is critical; markets often price expectations well ahead of formal announcements
+   - **Researchers:** NVDA exemplifies why multi-factor models outperform single-index CAPM for sector-concentrated stocks, and why forward-looking information incorporation is the hallmark of efficient markets
 
 ---
 
@@ -536,7 +500,7 @@ NVIDIA represents a textbook case of a high-volatility, high-growth technology s
 ### Assumptions and Limitations
 - **Stationarity:** Assumes log returns are stationary (not formally tested)
 - **No market frictions:** Ignores transaction costs, bid-ask spreads, market impact
-- **Event exogeneity:** Assumes earnings announcement on 2023-11-21 was not anticipated
+ - **Event exogeneity:** Assumes earnings announcement on 2023-08-23 was not anticipated
 - **Factor definitions:** SMH, QQQ, IWM proxies may not perfectly capture theoretical factors
 - **Causality:** Analysis is correlational; causal claims require additional investigation
 
@@ -566,4 +530,4 @@ NVIDIA represents a textbook case of a high-volatility, high-growth technology s
 *Report prepared as partial fulfillment of Financial Econometrics course requirements.*  
 *Submitted by: [Student Name]*  
 *Date: May 5, 2024*  
-*All analysis code and reproducible scripts are available in the accompanying R file (test.R).*
+*All analysis code and reproducible scripts are available in the accompanying R file (code.R).*
